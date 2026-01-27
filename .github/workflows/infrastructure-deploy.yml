@@ -11,16 +11,14 @@ jobs:
     name: Terraform Deploy
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: terraform
+
     
 
 
     steps:
        # 1️⃣ Checkout repo
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -37,6 +35,7 @@ jobs:
 
         # Terraform Init
       - name: Terraform Init
+        working-directory: terraform
         run: terraform init
      
 
