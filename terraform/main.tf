@@ -12,6 +12,9 @@ module "compute" {
   private_subnets = module.networking.private_subnets
   aws_region      = var.aws_region
   project_name    = var.project_name
+  mongo_uri       = var.mongo_uri
+  db_name         = var.db_name
+  jwt_secret      = var.jwt_secret
 }
 
 module "storage" {
