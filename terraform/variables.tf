@@ -10,15 +10,15 @@ variable "project_name" {
 }
 
 variable "mongo_uri" {
-  type    = string
+  type = string
 }
 
 variable "db_name" {
-  type    = string
-  
+  type = string
+
 }
 
 variable "jwt_secret" {
-  type    = string
-  
+  type = string
+
 }
