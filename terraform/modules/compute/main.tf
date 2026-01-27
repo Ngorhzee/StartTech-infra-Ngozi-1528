@@ -155,30 +155,44 @@ resource "aws_launch_template" "backend" {
   }
 
   network_interfaces {
-    security_groups = [aws_security_group.backend_sg.id]
+    associate_public_ip_address = false  # Private subnet, do not assign public IP
+    security_groups             = [aws_security_group.backend_sg.id]
   }
 
   user_data = base64encode(<<-EOF
-  #!/bin/bash
-  set -e
+    #!/bin/bash
+    set -e
 
-  apt-get update
-  apt-get install -y docker.io awscli
-  systemctl start docker
-  systemctl enable docker
+    # Update packages
+    apt-get update
+    apt-get install -y docker.io awscli jq
 
-  aws ecr get-login-password --region ${var.aws_region} | \
-    docker login --username AWS --password-stdin ${aws_ecr_repository.backend_repo.repository_url}
+    systemctl start docker
+    systemctl enable docker
 
-  docker run -d \
-    -p 8080:8080 \
-    -e SERVER_PORT=8080 \
-    -e PORT=8080 \
-    --restart unless-stopped \
-    ${aws_ecr_repository.backend_repo.repository_url}:latest
+    # Login to ECR
+    AWS_REGION="${var.aws_region}"
+    ECR_REPO="${aws_ecr_repository.backend_repo.repository_url}"
+    
+    echo "Logging into ECR..."
+    aws ecr get-login-password --region $AWS_REGION | \
+      docker login --username AWS --password-stdin $ECR_REPO
+
+    # Pull and run the backend container
+    docker pull $ECR_REPO:latest
+    docker run -d \
+      -p 8080:8080 \
+      -e SERVER_PORT=8080 \
+      -e PORT=8080 \
+      -e MONGO_URI="${var.mongo_uri}" \
+      -e DB_NAME="${var.db_name}" \
+      -e JWT_SECRET="${var.jwt_secret}" \
+      --restart unless-stopped \
+      $ECR_REPO:latest
 EOF
-)
+  )
 }
+
 
 
 # autoscaling group for backend ec2 intances

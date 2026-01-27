@@ -15,3 +15,18 @@ variable "project_name" {
 variable "aws_region" {
   type = string
 }
+
+variable "mongo_uri" {
+  type = string
+ 
+}
+
+variable "db_name" {
+  type = string
+  
+}
+
+variable "jwt_secret" {
+  type = string
+  
+}

@@ -62,5 +62,9 @@ jobs:
       # 7️⃣ Terraform Apply (Auto-deploy infra)
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main'
+        env:
+          TF_VAR_mongo_uri: ${{ secrets.MONGO_URI }}
+          TF_VAR_db_name: ${{ secrets.DB_NAME }}
+          TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET }}
         run: terraform apply -auto-approve tfplan
 
