@@ -11,7 +11,9 @@ jobs:
     name: Terraform Deploy
     runs-on: ubuntu-latest
 
-
+    defaults:
+      run:
+        working-directory: terraform
     
 
 
