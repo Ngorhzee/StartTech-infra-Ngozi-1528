@@ -159,23 +159,25 @@ resource "aws_launch_template" "backend" {
   }
 
   user_data = base64encode(<<-EOF
-    #!/bin/bash
-    set -e
+  #!/bin/bash
+  set -e
 
-    apt-get update
-    apt-get install -y docker.io awscli
-    systemctl start docker
-    systemctl enable docker
+  apt-get update
+  apt-get install -y docker.io awscli
+  systemctl start docker
+  systemctl enable docker
 
-    aws ecr get-login-password --region ${var.aws_region} | \
-      docker login --username AWS --password-stdin ${aws_ecr_repository.backend_repo.repository_url}
+  aws ecr get-login-password --region ${var.aws_region} | \
+    docker login --username AWS --password-stdin ${aws_ecr_repository.backend_repo.repository_url}
 
-    docker run -d \
-      -p 8080:8080 \
-      --restart unless-stopped \
-      ${aws_ecr_repository.backend_repo.repository_url}:latest
-  EOF
-  )
+  docker run -d \
+    -p 8080:8080 \
+    -e SERVER_PORT=8080 \
+    -e PORT=8080 \
+    --restart unless-stopped \
+    ${aws_ecr_repository.backend_repo.repository_url}:latest
+EOF
+)
 }
 
 
