@@ -1,3 +1,0 @@
-mongo_uri  = "mongodb+srv://ngoziamolo02_db_user:root_user_pass@much-todo-db.r2r8tqm.mongodb.net/?appName=much-todo-db"
-db_name    = "much-todo-db"
-jwt_secret = "your-super-secret-key-that-is-long-and-random"

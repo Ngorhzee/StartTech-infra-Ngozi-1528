@@ -46,8 +46,8 @@ resource "aws_cloudwatch_dashboard" "main" {
           annotations = {
             horizontal = [
               {
-                value = 1
-                label = "100"
+                value = 70
+                label = "High CPU (70%)"
               }
             ]
           }

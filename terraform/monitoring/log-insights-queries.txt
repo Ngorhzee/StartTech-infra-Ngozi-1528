@@ -1,0 +1,165 @@
+# CloudWatch Logs Insights Queries for StartTech Infrastructure
+
+
+# ============================================================================
+# ERROR ANALYSIS
+# ============================================================================
+
+# 1. Find all errors in the last hour
+fields @timestamp, @message
+| filter @message like /ERROR/ or @message like /error/ or @message like /Error/ or @message like /FATAL/ or @message like /Exception/
+| sort @timestamp desc
+| limit 100
+
+# 2. Count errors by type
+fields @timestamp, @message
+| filter @message like /ERROR/ or @message like /error/ or @message like /Error/
+| parse @message /(?<error_type>\w+Error|\w+Exception)/ 
+| stats count() by error_type
+| sort count desc
+
+# 3. Find errors in the last 24 hours grouped by hour
+fields @timestamp, @message
+| filter @message like /ERROR/ or @message like /error/ or @message like /Error/
+| stats count() by bin(1h)
+| sort @timestamp asc
+
+# ============================================================================
+# REQUEST ANALYSIS
+# ============================================================================
+
+# 4. Find slow requests (assuming structured logging with duration field)
+fields @timestamp, @message, duration
+| filter ispresent(duration) and duration > 1000
+| sort duration desc
+| limit 50
+
+# 5. Count requests by HTTP method
+fields @timestamp, @message
+| parse @message /(?<method>GET|POST|PUT|DELETE|PATCH)/
+| stats count() by method
+| sort count desc
+
+# 6. Find requests by status code
+fields @timestamp, @message
+| parse @message /(?<status_code>\d{3})/
+| filter status_code >= 400
+| stats count() by status_code
+| sort count desc
+
+# ============================================================================
+# PERFORMANCE MONITORING
+# ============================================================================
+
+# 7. Average response time by endpoint (if logging includes endpoint and duration)
+fields @timestamp, @message
+| parse @message /(?<endpoint>\/\w+).*duration=(?<duration>\d+)/
+| stats avg(duration) as avg_duration, max(duration) as max_duration, count() as request_count by endpoint
+| sort avg_duration desc
+
+# 8. Find requests taking longer than 2 seconds
+fields @timestamp, @message, duration
+| filter ispresent(duration) and duration > 2000
+| sort duration desc
+| limit 100
+
+# ============================================================================
+# APPLICATION HEALTH
+# ============================================================================
+
+# 9. Health check failures
+fields @timestamp, @message
+| filter @message like /health/ and (@message like /fail/ or @message like /error/ or @message like /unhealthy/)
+| stats count() by bin(5m)
+| sort @timestamp desc
+
+# 10. Database connection issues
+fields @timestamp, @message
+| filter @message like /database/ or @message like /mongo/ or @message like /connection/ or @message like /timeout/
+| sort @timestamp desc
+| limit 50
+
+# ============================================================================
+# SECURITY MONITORING
+# ============================================================================
+
+# 11. Authentication failures
+fields @timestamp, @message
+| filter @message like /auth/ and (@message like /fail/ or @message like /invalid/ or @message like /unauthorized/ or @message like /forbidden/)
+| stats count() by bin(1h)
+| sort @timestamp desc
+
+# 12. Unusual activity patterns
+fields @timestamp, @message, sourceIP
+| filter ispresent(sourceIP)
+| stats count() by sourceIP, bin(1h)
+| sort count desc
+| limit 20
+
+# ============================================================================
+# RESOURCE USAGE
+# ============================================================================
+
+# 13. Memory usage logs (if application logs memory)
+fields @timestamp, @message
+| parse @message /memory[=:](?<memory>\d+)/
+| stats avg(memory) as avg_memory, max(memory) as max_memory, min(memory) as min_memory by bin(5m)
+| sort @timestamp asc
+
+# 14. CPU usage logs (if application logs CPU)
+fields @timestamp, @message
+| parse @message /cpu[=:](?<cpu>\d+\.?\d*)/
+| stats avg(cpu) as avg_cpu, max(cpu) as max_cpu by bin(5m)
+| sort @timestamp asc
+
+# ============================================================================
+# API ENDPOINT ANALYSIS
+# ============================================================================
+
+# 15. Most frequently accessed endpoints
+fields @timestamp, @message
+| parse @message /(?<method>GET|POST|PUT|DELETE|PATCH)\s+(?<endpoint>\/[^\s]+)/
+| stats count() as request_count by endpoint, method
+| sort request_count desc
+| limit 20
+
+# 16. Endpoints with highest error rate
+fields @timestamp, @message
+| parse @message /(?<method>GET|POST|PUT|DELETE|PATCH)\s+(?<endpoint>\/[^\s]+).*(?<status>\d{3})/
+| filter status >= 400
+| stats count() as error_count by endpoint
+| sort error_count desc
+| limit 20
+
+# ============================================================================
+# TIME-BASED ANALYSIS
+# ============================================================================
+
+# 17. Request volume by hour (last 24 hours)
+fields @timestamp, @message
+| stats count() as request_count by bin(1h)
+| sort @timestamp asc
+
+# 18. Peak usage times
+fields @timestamp, @message
+| stats count() as request_count by bin(1h)
+| sort request_count desc
+| limit 10
+
+# ============================================================================
+# ERROR TRACKING
+# ============================================================================
+
+# 19. Unique errors in the last 24 hours
+fields @timestamp, @message
+| filter @message like /ERROR/ or @message like /Exception/
+| parse @message /(?<error_message>[^\n]+)/
+| stats count() as occurrence_count by error_message
+| sort occurrence_count desc
+| limit 50
+
+# 20. Error rate trend
+fields @timestamp, @message
+| filter @message like /ERROR/ or @message like /error/ or @message like /Error/
+| stats count() as error_count by bin(15m)
+| sort @timestamp asc

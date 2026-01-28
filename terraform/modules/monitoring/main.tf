@@ -1,3 +1,16 @@
+resource "aws_sns_topic" "alarms" {
+  name = "${var.project_name}-alarms"
+  
+  tags = {
+    Name        = "${var.project_name}-alarms"
+    Environment = "Production"
+  }
+}
+resource "aws_sns_topic_subscription" "email" {
+  topic_arn = aws_sns_topic.alarms.arn
+  protocol  = "email"
+  endpoint  = "ngoziamolo02@gmail.com"
+}
 # cloudwatch log group for backend ec2 intances
 resource "aws_cloudwatch_log_group" "backend_logs" {
   name              = "/${var.project_name}/backend"
@@ -23,6 +36,8 @@ resource "aws_cloudwatch_log_group" "frontend_logs" {
   dimensions = {
     AutoScalingGroupName = var.asg_name
   }
+    alarm_actions = [aws_sns_topic.alarms.arn]
+  ok_actions    = [aws_sns_topic.alarms.arn]
 
   alarm_description = "High CPU usage on backend EC2 instances"
 }
@@ -34,13 +49,17 @@ resource "aws_cloudwatch_metric_alarm" "unhealthy_targets" {
   metric_name         = "UnHealthyHostCount"
   namespace           = "AWS/ApplicationELB"
   period              = 60
-  statistic           = "Average"
+  statistic           = "Maximum"
   threshold           = 0
 
   dimensions = {
     LoadBalancer = var.alb_arn_suffix
     TargetGroup  = var.target_group_arn_suffix
+  
   }
+    alarm_actions = [aws_sns_topic.alarms.arn]
+    ok_actions = [aws_sns_topic.alarms.arn]
 
-  alarm_description = "Backend targets are unhealthy"
+  alarm_description = "One or more backend targets are unhealthy"
+  
 }

@@ -1,0 +1,228 @@
+{
+    "widgets": [
+      {
+        "type": "metric",
+        "x": 0,
+        "y": 0,
+        "width": 12,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["AWS/EC2", "CPUUtilization", "AutoScalingGroupName", "terraform-20260126193814214500000007", { "stat": "Average" }],
+            [".", "CPUUtilization", ".", ".", { "stat": "Maximum" }],
+            [".", "CPUUtilization", ".", ".", { "stat": "Minimum" }]
+          ],
+          "period": 300,
+          "stat": "Average",
+          "region": "eu-west-1",
+          "title": "Backend EC2 CPU Utilization",
+          "yAxis": {
+            "left": {
+              "min": 0,
+              "max": 100
+            }
+          },
+          "annotations": {
+            "horizontal": [
+              {
+                "value": 70,
+                "label": "High CPU Threshold",
+                "color": "#ff9900"
+              },
+              {
+                "value": 90,
+                "label": "Critical CPU Threshold",
+                "color": "#ff0000"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "metric",
+        "x": 12,
+        "y": 0,
+        "width": 12,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["AWS/EC2", "NetworkIn", "AutoScalingGroupName", "terraform-20260126193814214500000007", { "stat": "Sum" }],
+            [".", "NetworkOut", ".", ".", { "stat": "Sum" }]
+          ],
+          "period": 300,
+          "stat": "Sum",
+          "region": "eu-west-1",
+          "title": "Backend EC2 Network Traffic",
+          "yAxis": {
+            "left": {
+              "label": "Bytes"
+            }
+          }
+        }
+      },
+      {
+        "type": "metric",
+        "x": 0,
+        "y": 6,
+        "width": 12,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["AWS/ApplicationELB", "RequestCount", "LoadBalancer", "app/starttech-backend-alb/d787e72ae6c9579a", { "stat": "Sum" }],
+            [".", "HTTPCode_Target_2XX_Count", ".", ".", { "stat": "Sum" }],
+            [".", "HTTPCode_Target_4XX_Count", ".", ".", { "stat": "Sum" }],
+            [".", "HTTPCode_Target_5XX_Count", ".", ".", { "stat": "Sum" }]
+          ],
+          "period": 300,
+          "stat": "Sum",
+          "region": "eu-west-1",
+          "title": "ALB Request Count and Status Codes",
+          "yAxis": {
+            "left": {
+              "label": "Count"
+            }
+          }
+        }
+      },
+      {
+        "type": "metric",
+        "x": 12,
+        "y": 6,
+        "width": 12,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["AWS/ApplicationELB", "TargetResponseTime", "LoadBalancer", "app/starttech-backend-alb/d787e72ae6c9579a", { "stat": "Average" }],
+            [".", "TargetResponseTime", ".", ".", { "stat": "p99" }],
+            [".", "TargetResponseTime", ".", ".", { "stat": "p95" }]
+          ],
+          "period": 300,
+          "stat": "Average",
+          "region": "eu-west-1",
+          "title": "ALB Target Response Time",
+          "yAxis": {
+            "left": {
+              "label": "Seconds"
+            }
+          },
+          "annotations": {
+            "horizontal": [
+              {
+                "value": 1,
+                "label": "1 Second Threshold",
+                "color": "#ff9900"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "metric",
+        "x": 0,
+        "y": 12,
+        "width": 12,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["AWS/ApplicationELB", "HealthyHostCount", "LoadBalancer", "app/starttech-backend-alb/d787e72ae6c9579a", "TargetGroup", "targetgroup/starttech-backend-tg/70856c3c7728d95d", { "stat": "Average" }],
+            [".", "UnHealthyHostCount", ".", ".", ".", ".", { "stat": "Average" }]
+          ],
+          "period": 300,
+          "stat": "Average",
+          "region": "eu-west-1",
+          "title": "ALB Target Health Status",
+          "yAxis": {
+            "left": {
+              "label": "Host Count",
+              "min": 0
+            }
+          }
+        }
+      },
+      {
+        "type": "metric",
+        "x": 12,
+        "y": 12,
+        "width": 12,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["AWS/AutoScaling", "GroupDesiredCapacity", "AutoScalingGroupName", "terraform-20260126193814214500000007"],
+            [".", "GroupInServiceInstances", ".", "."],
+            [".", "GroupTotalInstances", ".", "."]
+          ],
+          "period": 300,
+          "stat": "Average",
+          "region": "eu-west-1",
+          "title": "Auto Scaling Group Capacity",
+          "yAxis": {
+            "left": {
+              "label": "Instance Count",
+              "min": 0
+            }
+          }
+        }
+      },
+      {
+        "type": "metric",
+        "x": 0,
+        "y": 18,
+        "width": 12,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["AWS/CloudFront", "Requests", "DistributionId", "E71MU4DPTTHR9", "Region", "Global", { "stat": "Sum" }],
+            [".", "BytesDownloaded", ".", ".", ".", ".", { "stat": "Sum" }],
+            [".", "BytesUploaded", ".", ".", ".", ".", { "stat": "Sum" }]
+          ],
+          "period": 300,
+          "stat": "Sum",
+          "region": "us-east-1",
+          "title": "CloudFront Requests and Data Transfer",
+          "yAxis": {
+            "left": {
+              "label": "Count/Bytes"
+            }
+          }
+        }
+      },
+      {
+        "type": "metric",
+        "x": 12,
+        "y": 18,
+        "width": 12,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["AWS/CloudFront", "4xxErrorRate", "DistributionId", "E71MU4DPTTHR9", "Region", "Global", { "stat": "Average" }],
+            [".", "5xxErrorRate", ".", ".", ".", ".", { "stat": "Average" }],
+            [".", "CacheHitRate", ".", ".", ".", ".", { "stat": "Average" }]
+          ],
+          "period": 300,
+          "stat": "Average",
+          "region": "us-east-1",
+          "title": "CloudFront Error Rates and Cache Performance",
+          "yAxis": {
+            "left": {
+              "label": "Percentage",
+              "min": 0,
+              "max": 100
+            }
+          }
+        }
+      },
+      {
+        "type": "log",
+        "x": 0,
+        "y": 24,
+        "width": 24,
+        "height": 6,
+        "properties": {
+          "query": "SOURCE '/starttech/backend' | fields @timestamp, @message\n| filter @message like /ERROR/ or @message like /error/ or @message like /Error/\n| sort @timestamp desc\n| limit 100",
+          "region": "eu-west-1",
+          "title": "Backend Application Errors (Last 100)",
+          "view": "table"
+        }
+      }
+    ]
+  }

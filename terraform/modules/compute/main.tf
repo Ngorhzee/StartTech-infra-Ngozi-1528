@@ -109,6 +109,11 @@ resource "aws_iam_role_policy_attachment" "cloudwatch_attach" {
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
 }
 
+resource "aws_iam_role_policy_attachment" "ssm_attach" {
+  role       = aws_iam_role.backend_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
 # application load balancer for backend ec2 intances
 resource "aws_lb" "app_alb" {
   name               = "${var.project_name}-backend-alb"
@@ -144,7 +149,6 @@ resource "aws_lb_listener" "http" {
 
 
 
-#launch template for backend ec2 intances
 resource "aws_launch_template" "backend" {
   name_prefix   = "${var.project_name}-backend-"
   image_id      = data.aws_ami.ubuntu.id
@@ -155,58 +159,69 @@ resource "aws_launch_template" "backend" {
   }
 
   network_interfaces {
-    associate_public_ip_address = false  # Private subnet, do not assign public IP
-    security_groups             = [aws_security_group.backend_sg.id]
+    security_groups = [aws_security_group.backend_sg.id]
   }
 
   user_data = base64encode(<<-EOF
-    #!/bin/bash
-    set -e
+  #!/bin/bash
+  set -e
 
-    # Update packages
-    apt-get update
-    apt-get install -y docker.io awscli jq
+  # Install Docker
+  apt-get update
+  apt-get install -y docker.io awscli
+  systemctl start docker
+  systemctl enable docker
 
-    systemctl start docker
-    systemctl enable docker
+  # Login to ECR
+  aws ecr get-login-password --region ${var.aws_region} | \
+    docker login --username AWS --password-stdin ${aws_ecr_repository.backend_repo.repository_url}
 
-    # Login to ECR
-    AWS_REGION="${var.aws_region}"
-    ECR_REPO="${aws_ecr_repository.backend_repo.repository_url}"
-    
-    echo "Logging into ECR..."
-    aws ecr get-login-password --region $AWS_REGION | \
-      docker login --username AWS --password-stdin $ECR_REPO
+  # Run container
+  docker run -d \
+    -p 8080:8080 \
+    -e SERVER_PORT=8080 \
+    -e PORT=8080 \
+    -e MONGO_URI=${var.mongo_uri} \
+    -e DB_NAME=${var.db_name} \
+    -e JWT_SECRET_KEY=${var.jwt_secret} \
+    --restart unless-stopped \
+    ${aws_ecr_repository.backend_repo.repository_url}:latest
 
-    # Pull and run the backend container
-    docker pull $ECR_REPO:latest
-    docker run -d \
-      -p 8080:8080 \
-      -e SERVER_PORT=8080 \
-      -e PORT=8080 \
-      -e MONGO_URI="${var.mongo_uri}" \
-      -e DB_NAME="${var.db_name}" \
-      -e JWT_SECRET="${var.jwt_secret}" \
-      --restart unless-stopped \
-      $ECR_REPO:latest
+  # Wait until container responds on /health
+  for i in $(seq 1 30); do
+    if curl -s http://localhost:8080/health | grep pong; then
+      echo "App is healthy"
+      exit 0
+    fi
+    echo "Waiting for app to be healthy..."
+    sleep 5
+  done
+
+  echo "App failed to become healthy in time"
+  exit 1
 EOF
   )
 }
 
 
 
+
 # autoscaling group for backend ec2 intances
 resource "aws_autoscaling_group" "backend_asg" {
-  desired_capacity = 2
-  max_size         = 4
-  min_size         = 2
-
-  vpc_zone_identifier = var.private_subnets
+  desired_capacity     = 2
+  max_size             = 4
+  min_size             = 2
+  vpc_zone_identifier  = var.private_subnets
+  
 
   launch_template {
     id      = aws_launch_template.backend.id
     version = "$Latest"
   }
 
-  target_group_arns = [aws_lb_target_group.backend_tg.arn]
+  target_group_arns         = [aws_lb_target_group.backend_tg.arn]
+  health_check_type         = "ELB"
+  health_check_grace_period = 180  # 3 minutes
+  force_delete              = true
 }
+
